@@ -29,6 +29,7 @@ AMyCharacter::AMyCharacter(const FObjectInitializer& ObjectInitializer) : Super(
 	GetCharacterMovement()->JumpZVelocity = 600.f;
 	GetCharacterMovement()->AirControl = 0.2f;
 
+
 	FPCameraSpringArm = CreateDefaultSubobject<USpringArmComponent>(TEXT("FPSpringArm"));
 	FPCameraSpringArm->SetupAttachment(RootComponent);
 	FPCameraSpringArm->TargetArmLength = 300.0f;
@@ -38,6 +39,8 @@ AMyCharacter::AMyCharacter(const FObjectInitializer& ObjectInitializer) : Super(
 	Camera->SetupAttachment(FPCameraSpringArm, USpringArmComponent::SocketName);
 
 	Camera->bUsePawnControlRotation = false;
+
+	TraceLength = 150;
 
 }
 
@@ -64,6 +67,8 @@ void AMyCharacter::BeginPlay()
 void AMyCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	AMyCharacter::TraceForGround();
 
 	/*FHitResult OutHit;
 
@@ -107,7 +112,7 @@ void AMyCharacter::MoveForward(float axisValue)
 
 	if (NormalMovement && (NormalMovement->UpdatedComponent == RootComponent))
 	{
-		UE_LOG(LogTemp, Display, TEXT("Vector value is %s"), *(GetActorForwardVector() * axisValue).ToString());
+		//UE_LOG(LogTemp, Display, TEXT("Vector value is %s"), *(GetActorForwardVector() * axisValue).ToString());
 		NormalMovement->AddInputVector(GetActorForwardVector() * axisValue);
 		GEngine->AddOnScreenDebugMessage(-1, 12.f, FColor::White, FString::SanitizeFloat(axisValue));
 	}
@@ -117,6 +122,22 @@ void AMyCharacter::MoveForward(float axisValue)
 		//UE_LOG(LogTemp, Display, TEXT("NULL FCK NULL"));
 
 	}
+}
+
+void AMyCharacter::TraceForGround()
+{
+
+	FHitResult HitOut;
+
+	FVector Start = GetActorLocation();
+	FVector End = FVector(Start.X, Start.Y, Start.Z - TraceLength);
+
+	FCollisionQueryParams TraceParams;
+
+	GetWorld()->LineTraceSingleByChannel(HitOut, Start, End, ECC_Pawn, TraceParams);
+
+	DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 1, 0, 1);
+
 }
 
 void AMyCharacter::CameraPitch(float AxisValue)

@@ -57,6 +57,11 @@ public:
 
 	void CameraYaw(float AxisValue);
 
+	void TraceForGround();
+
+	UPROPERTY(Category = "Trace", VisibleAnywhere, BlueprintReadWrite)
+	float TraceLength;
+
 private: 
 
 	UPROPERTY(Category = Character, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
