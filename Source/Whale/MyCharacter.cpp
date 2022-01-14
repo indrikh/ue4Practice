@@ -12,14 +12,6 @@ AMyCharacter::AMyCharacter(const FObjectInitializer& ObjectInitializer) : Super(
 	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	UE_LOG(LogTemp, Display, TEXT("The boolean value is %s"), (NormalMovement != NULL ? TEXT("true") : TEXT("false")));
-	//NormalMovement = Cast<UNormalMovementComponent>(Super::GetMovementComponent());
-	//NormalMovement->TestMSG();
-	UE_LOG(LogTemp, Display, TEXT("Super comp is %s"), (Super::GetMovementComponent() != NULL ? TEXT("true") : TEXT("false")));
-	/*NormalMovement = CreateDefaultSubobject<UNormalMovementComponent>(TEXT("NormalMovementComponent"));
-	NormalMovement->UpdatedComponent = RootComponent;*/
-	UE_LOG(LogTemp, Display, TEXT("The boolean value is %s"), (NormalMovement != NULL ? TEXT("true") : TEXT("false")));
-
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = false;
 	bUseControllerRotationRoll = false;
@@ -60,7 +52,6 @@ void AMyCharacter::PostInitializeComponents()
 void AMyCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	
 }
 
 // Called every frame
@@ -69,6 +60,8 @@ void AMyCharacter::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	AMyCharacter::TraceForGround();
+
+	//GEngine->AddOnScreenDebugMessage(-1, 1.f, FColor::Red, FString::SanitizeFloat());
 
 	/*FHitResult OutHit;
 
@@ -100,6 +93,7 @@ void AMyCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputC
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
 	PlayerInputComponent->BindAxis("MoveForward", this, &AMyCharacter::MoveForward);
+	PlayerInputComponent->BindAxis("MoveRight", this, &AMyCharacter::MoveRight);
 
 	PlayerInputComponent->BindAxis("Turn", this, &AMyCharacter::CameraPitch);
 	PlayerInputComponent->BindAxis("LookUp", this, &AMyCharacter::CameraYaw);
@@ -108,19 +102,17 @@ void AMyCharacter::SetupPlayerInputComponent(class UInputComponent* PlayerInputC
 
 void AMyCharacter::MoveForward(float axisValue)
 {
-	// AMyCharacter::GetMovementComponent()->AddInputVector(GetActorForwardVector() * axisValue);
-
 	if (NormalMovement && (NormalMovement->UpdatedComponent == RootComponent))
 	{
-		//UE_LOG(LogTemp, Display, TEXT("Vector value is %s"), *(GetActorForwardVector() * axisValue).ToString());
 		NormalMovement->AddInputVector(GetActorForwardVector() * axisValue);
-		GEngine->AddOnScreenDebugMessage(-1, 12.f, FColor::White, FString::SanitizeFloat(axisValue));
 	}
+}
 
-	if (NormalMovement == NULL)
+void AMyCharacter::MoveRight(float axisValue)
+{
+	if (NormalMovement && (NormalMovement->UpdatedComponent == RootComponent))
 	{
-		//UE_LOG(LogTemp, Display, TEXT("NULL FCK NULL"));
-
+		NormalMovement->AddInputVector(GetActorRightVector() * axisValue);
 	}
 }
 
@@ -134,18 +126,26 @@ void AMyCharacter::TraceForGround()
 
 	FCollisionQueryParams TraceParams;
 
-	GetWorld()->LineTraceSingleByChannel(HitOut, Start, End, ECC_Pawn, TraceParams);
+	GetWorld()->LineTraceSingleByChannel(HitOut, Start, End, ECC_Visibility, TraceParams);
 
-	DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 1, 0, 1);
+	//DrawDebugLine(GetWorld(), Start, End, FColor::Red, false, 1, 0, 1);
 
+	if (HitOut.bBlockingHit)
+	{
+		DrawDebugPoint(GetWorld(), HitOut.Location, 20.f, FColor::Red, false, 1.f, SDPG_World);
+		DrawDebugLine(GetWorld(), HitOut.Location, Start, FColor::Green, false, 1.f, SDPG_World, 2.f);
+		HitTraceNormal = HitOut.Normal;
+		//DrawDebugDirectionalArrow(GetWorld(), HitTraceNormal, HitTraceNormal)
+		SetActorRotation(HitTraceNormal.Rotation());
+	}
 }
 
 void AMyCharacter::CameraPitch(float AxisValue)
 {
-	//GEngine->AddOnScreenDebugMessage(-1, 12.f, FColor::White, TEXT("Pitch"));
+	AddControllerYawInput(AxisValue);
 }
 
 void AMyCharacter::CameraYaw(float AxisValue)
 {
-	//GEngine->AddOnScreenDebugMessage(-1, 12.f, FColor::White, TEXT("Yaw"));
+	AddControllerPitchInput(AxisValue);
 }

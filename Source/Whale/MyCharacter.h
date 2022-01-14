@@ -59,12 +59,14 @@ public:
 
 	void TraceForGround();
 
-	UPROPERTY(Category = "Trace", VisibleAnywhere, BlueprintReadWrite)
+	UPROPERTY(Category = "Trace", BlueprintReadWrite, EditAnywhere)
 	float TraceLength;
 
 private: 
 
 	UPROPERTY(Category = Character, VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	class UNormalMovementComponent* NormalMovement;
+
+	FVector HitTraceNormal;
 
 };
